@@ -1,10 +1,7 @@
+// Importar las funciones de Firebase
+import { auth, loginWithEmailAndPassword, logoutUser, onAuthChange, saveData, updateData, deleteData, getAllData, getData } from "./firebase-config.js";
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Credenciales de administrador (en un entorno real, esto debería estar en el servidor)
-    const adminCredentials = {
-        username: 'admin',
-        // Contraseña más segura con combinación de letras, números y caracteres especiales
-        password: 'Vintage@2025!'
-    };
     
     // Referencias a elementos del DOM
     const loginSection = document.getElementById('login-section');
@@ -29,78 +26,110 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const sobreMiForm = document.getElementById('sobreMiForm');
     
-    // Verificar si el usuario está autenticado y la sesión no ha expirado
+    // Verificar si el usuario está autenticado usando Firebase Auth
     function checkAuth() {
-        const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-        const authExpiration = localStorage.getItem('authExpiration');
-        const currentTime = new Date().getTime();
-        
-        // Verificar si la autenticación es válida y no ha expirado
-        if (isAuthenticated && authExpiration && currentTime < parseInt(authExpiration)) {
-            loginSection.style.display = 'none';
-            adminPanel.style.display = 'block';
-            loadAllContent();
-        } else {
-            // Si la sesión expiró, limpiar datos de autenticación
-            if (isAuthenticated) {
-                localStorage.removeItem('isAuthenticated');
-                localStorage.removeItem('authExpiration');
+        onAuthChange((user) => {
+            if (user) {
+                // Usuario autenticado
+                loginSection.style.display = 'none';
+                adminPanel.style.display = 'block';
+                loadAllContent();
+            } else {
+                // Usuario no autenticado
+                loginSection.style.display = 'block';
+                adminPanel.style.display = 'none';
             }
-            loginSection.style.display = 'block';
-            adminPanel.style.display = 'none';
+        });
+    }
+    
+    // Inicializar datos en Firebase si no existen
+    async function initializeData() {
+        try {
+            // Verificar si ya existen datos en Firebase
+            const serviciosResult = await getAllData('servicios');
+            const portafolioResult = await getAllData('portafolio');
+            const testimoniosResult = await getAllData('testimonios');
+            const sobreMiResult = await getAllData('sobreMi');
+            
+            // Si no hay servicios, inicializar con datos predeterminados
+            if (!serviciosResult.success || serviciosResult.data.length === 0) {
+                const defaultServicios = [
+                    { id: '1', titulo: 'Tapizado de Muebles', descripcion: 'Transformamos tus muebles con telas de alta calidad y atención al detalle.' },
+                    { id: '2', titulo: 'Restauración de Sillas y Sofás', descripcion: 'Devolvemos la vida a tus muebles antiguos, conservando su encanto original.' },
+                    { id: '3', titulo: 'Reparación de Tapicería', descripcion: 'Solucionamos cualquier daño en la tapicería de tus muebles.' },
+                    { id: '4', titulo: 'Creación de Piezas Personalizadas', descripcion: 'Diseñamos y creamos muebles tapizados a medida según tus necesidades. Fabricamos tu mueble a la medida de tu espacio.' }
+                ];
+                
+                for (const servicio of defaultServicios) {
+                    await saveData('servicios', servicio.id, servicio);
+                }
+            }
+            
+            // Si no hay portafolio, inicializar con datos predeterminados
+            if (!portafolioResult.success || portafolioResult.data.length === 0) {
+                const defaultPortafolio = [
+                    { id: '1', titulo: 'Silla Vintage Restaurada', imagen: 'https://cdn.gamma.app/bt4ezuzuwajpo7o/generated-images/QxMEpc58S8DzNhA1qvNup.jpg' },
+                    { id: '2', titulo: 'Sofá Moderno', imagen: 'https://cdn.gamma.app/bt4ezuzuwajpo7o/generated-images/Ytf9xu4vUqSX5LbCFAhrB.jpg' },
+                    { id: '3', titulo: 'Sillón Restaurado', imagen: 'https://cdn.gamma.app/bt4ezuzuwajpo7o/generated-images/p3ssEpNrPCC89Nu20UxOK.jpg' }
+                ];
+                
+                for (const item of defaultPortafolio) {
+                    await saveData('portafolio', item.id, item);
+                }
+            }
+            
+            // Si no hay testimonios, inicializar con datos predeterminados
+            if (!testimoniosResult.success || testimoniosResult.data.length === 0) {
+                const defaultTestimonios = [
+                    { id: '1', nombre: 'María Pérez', titulo: 'Excelente Servicio', texto: '¡Estoy encantada con el trabajo! Mi sofá luce como nuevo y el servicio fue impecable.', imagen: 'https://cdn.gamma.app/bt4ezuzuwajpo7o/generated-images/eCj4BRzrPCDsYe2kGlXcc.jpg' },
+                    { id: '2', nombre: 'Juan Rodríguez', titulo: 'Profesionales y Dedicados', texto: 'Recomiendo Vintage Tapicería. Cumplieron con mis expectativas y superaron mis sueños.', imagen: 'https://cdn.gamma.app/bt4ezuzuwajpo7o/generated-images/o5XP6lTV3KbOucPwcFQb1.jpg' }
+                ];
+                
+                for (const testimonio of defaultTestimonios) {
+                    await saveData('testimonios', testimonio.id, testimonio);
+                }
+            }
+            
+            // Si no hay información de Sobre Mí, inicializar con datos predeterminados
+            if (!sobreMiResult.success || sobreMiResult.data.length === 0) {
+                const defaultSobreMi = {
+                    id: '1',
+                    texto: 'Soy un tapicero apasionado con años de experiencia en el arte de transformar muebles. Mi objetivo es superar tus expectativas.',
+                    imagen: 'https://cdn.gamma.app/bt4ezuzuwajpo7o/generated-images/6OKg0tL5R5dkfY0sjcAQE.jpg'
+                };
+                
+                await saveData('sobreMi', defaultSobreMi.id, defaultSobreMi);
+            }
+        } catch (error) {
+            console.error('Error al inicializar datos:', error);
         }
     }
     
-    // Inicializar datos si no existen
-    function initializeData() {
-        if (!localStorage.getItem('servicios')) {
-            const defaultServicios = [
-                { id: 1, titulo: 'Tapizado de Muebles', descripcion: 'Transformamos tus muebles con telas de alta calidad y atención al detalle.' },
-                { id: 2, titulo: 'Restauración de Sillas y Sofás', descripcion: 'Devolvemos la vida a tus muebles antiguos, conservando su encanto original.' },
-                { id: 3, titulo: 'Reparación de Tapicería', descripcion: 'Solucionamos cualquier daño en la tapicería de tus muebles.' },
-                { id: 4, titulo: 'Creación de Piezas Personalizadas', descripcion: 'Diseñamos y creamos muebles tapizados a medida según tus necesidades. Fabricamos tu mueble a la medida de tu espacio.' }
-            ];
-            localStorage.setItem('servicios', JSON.stringify(defaultServicios));
-        }
-        
-        if (!localStorage.getItem('portafolio')) {
-            const defaultPortafolio = [
-                { id: 1, titulo: 'Silla Vintage Restaurada', imagen: 'https://cdn.gamma.app/bt4ezuzuwajpo7o/generated-images/QxMEpc58S8DzNhA1qvNup.jpg' },
-                { id: 2, titulo: 'Sofá Moderno', imagen: 'https://cdn.gamma.app/bt4ezuzuwajpo7o/generated-images/Ytf9xu4vUqSX5LbCFAhrB.jpg' },
-                { id: 3, titulo: 'Sillón Restaurado', imagen: 'https://cdn.gamma.app/bt4ezuzuwajpo7o/generated-images/p3ssEpNrPCC89Nu20UxOK.jpg' }
-            ];
-            localStorage.setItem('portafolio', JSON.stringify(defaultPortafolio));
-        }
-        
-        if (!localStorage.getItem('testimonios')) {
-            const defaultTestimonios = [
-                { id: 1, nombre: 'María Pérez', titulo: 'Excelente Servicio', texto: '¡Estoy encantada con el trabajo! Mi sofá luce como nuevo y el servicio fue impecable.', imagen: 'https://cdn.gamma.app/bt4ezuzuwajpo7o/generated-images/eCj4BRzrPCDsYe2kGlXcc.jpg' },
-                { id: 2, nombre: 'Juan Rodríguez', titulo: 'Profesionales y Dedicados', texto: 'Recomiendo Vintage Tapicería. Cumplieron con mis expectativas y superaron mis sueños.', imagen: 'https://cdn.gamma.app/bt4ezuzuwajpo7o/generated-images/o5XP6lTV3KbOucPwcFQb1.jpg' }
-            ];
-            localStorage.setItem('testimonios', JSON.stringify(defaultTestimonios));
-        }
-        
-        if (!localStorage.getItem('sobreMi')) {
-            const defaultSobreMi = {
-                texto: 'Soy un tapicero apasionado con años de experiencia en el arte de transformar muebles. Mi objetivo es superar tus expectativas.',
-                imagen: 'https://cdn.gamma.app/bt4ezuzuwajpo7o/generated-images/6OKg0tL5R5dkfY0sjcAQE.jpg'
-            };
-            localStorage.setItem('sobreMi', JSON.stringify(defaultSobreMi));
+    // Cargar todos los contenidos desde Firebase
+    async function loadAllContent() {
+        try {
+            await Promise.all([
+                loadServicios(),
+                loadPortafolio(),
+                loadTestimonios(),
+                loadSobreMi()
+            ]);
+        } catch (error) {
+            console.error('Error al cargar contenido:', error);
         }
     }
     
-    // Cargar todos los contenidos
-    function loadAllContent() {
-        loadServicios();
-        loadPortafolio();
-        loadTestimonios();
-        loadSobreMi();
-    }
-    
-    // Cargar servicios
-    function loadServicios() {
-        const servicios = JSON.parse(localStorage.getItem('servicios')) || [];
-        serviciosList.innerHTML = '';
+    // Cargar servicios desde Firebase
+    async function loadServicios() {
+        try {
+            const result = await getAllData('servicios');
+            if (!result.success) {
+                console.error('Error al cargar servicios:', result.error);
+                return;
+            }
+            
+            const servicios = result.data || [];
+            serviciosList.innerHTML = '';
         
         servicios.forEach(servicio => {
             const servicioItem = document.createElement('div');
@@ -130,10 +159,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Cargar portafolio
-    function loadPortafolio() {
-        const portafolio = JSON.parse(localStorage.getItem('portafolio')) || [];
-        portafolioList.innerHTML = '';
+    // Cargar portafolio desde Firebase
+    async function loadPortafolio() {
+        try {
+            const result = await getAllData('portafolio');
+            if (!result.success) {
+                console.error('Error al cargar portafolio:', result.error);
+                return;
+            }
+            
+            const portafolio = result.data || [];
+            portafolioList.innerHTML = '';
         
         portafolio.forEach(item => {
             const portafolioItem = document.createElement('div');
@@ -163,10 +199,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Cargar testimonios
-    function loadTestimonios() {
-        const testimonios = JSON.parse(localStorage.getItem('testimonios')) || [];
-        testimoniosList.innerHTML = '';
+    // Cargar testimonios desde Firebase
+    async function loadTestimonios() {
+        try {
+            const result = await getAllData('testimonios');
+            if (!result.success) {
+                console.error('Error al cargar testimonios:', result.error);
+                return;
+            }
+            
+            const testimonios = result.data || [];
+            testimoniosList.innerHTML = '';
         
         testimonios.forEach(testimonio => {
             const testimonioItem = document.createElement('div');
@@ -197,135 +240,211 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Cargar información de Sobre Mí
-    function loadSobreMi() {
-        const sobreMi = JSON.parse(localStorage.getItem('sobreMi')) || {};
-        document.getElementById('sobre-mi-texto').value = sobreMi.texto || '';
-        document.getElementById('sobre-mi-imagen').value = sobreMi.imagen || '';
-        
-        const imagenPreview = document.getElementById('sobre-mi-imagen-preview');
-        if (sobreMi.imagen) {
-            imagenPreview.src = sobreMi.imagen;
-            imagenPreview.style.display = 'block';
-        } else {
-            imagenPreview.style.display = 'none';
-        }
-    }
-    
-    // Editar servicio
-    function editServicio(id) {
-        const servicios = JSON.parse(localStorage.getItem('servicios')) || [];
-        const servicio = servicios.find(s => s.id == id);
-        
-        if (servicio) {
-            document.getElementById('servicio-id').value = servicio.id;
-            document.getElementById('servicio-titulo').value = servicio.titulo;
-            document.getElementById('servicio-descripcion').value = servicio.descripcion;
+    // Cargar información de Sobre Mí desde Firebase
+    async function loadSobreMi() {
+        try {
+            const result = await getAllData('sobreMi');
+            if (!result.success) {
+                console.error('Error al cargar sobre mí:', result.error);
+                return;
+            }
             
-            document.getElementById('servicio-form-title').textContent = 'Editar Servicio';
-            servicioForm.style.display = 'block';
-        }
-    }
-    
-    // Eliminar servicio
-    function deleteServicio(id) {
-        if (confirm('¿Estás seguro de que deseas eliminar este servicio?')) {
-            let servicios = JSON.parse(localStorage.getItem('servicios')) || [];
-            servicios = servicios.filter(s => s.id != id);
-            localStorage.setItem('servicios', JSON.stringify(servicios));
-            loadServicios();
-        }
-    }
-    
-    // Editar portafolio
-    function editPortafolio(id) {
-        const portafolio = JSON.parse(localStorage.getItem('portafolio')) || [];
-        const item = portafolio.find(p => p.id == id);
-        
-        if (item) {
-            document.getElementById('portafolio-id').value = item.id;
-            document.getElementById('portafolio-titulo').value = item.titulo;
-            document.getElementById('portafolio-imagen').value = item.imagen;
+            // Como sobreMi es un solo documento, tomamos el primero si existe
+            const sobreMiArray = result.data || [];
+            const sobreMi = sobreMiArray.length > 0 ? sobreMiArray[0] : {};
             
-            const imagenPreview = document.getElementById('portafolio-imagen-preview');
-            imagenPreview.src = item.imagen;
-            imagenPreview.style.display = 'block';
+            document.getElementById('sobre-mi-texto').value = sobreMi.texto || '';
+            document.getElementById('sobre-mi-imagen').value = sobreMi.imagen || '';
             
-            document.getElementById('portafolio-form-title').textContent = 'Editar Proyecto';
-            portafolioForm.style.display = 'block';
-        }
-    }
-    
-    // Eliminar portafolio
-    function deletePortafolio(id) {
-        if (confirm('¿Estás seguro de que deseas eliminar este proyecto?')) {
-            let portafolio = JSON.parse(localStorage.getItem('portafolio')) || [];
-            portafolio = portafolio.filter(p => p.id != id);
-            localStorage.setItem('portafolio', JSON.stringify(portafolio));
-            loadPortafolio();
-        }
-    }
-    
-    // Editar testimonio
-    function editTestimonio(id) {
-        const testimonios = JSON.parse(localStorage.getItem('testimonios')) || [];
-        const testimonio = testimonios.find(t => t.id == id);
-        
-        if (testimonio) {
-            document.getElementById('testimonio-id').value = testimonio.id;
-            document.getElementById('testimonio-nombre').value = testimonio.nombre;
-            document.getElementById('testimonio-titulo').value = testimonio.titulo;
-            document.getElementById('testimonio-texto').value = testimonio.texto;
-            document.getElementById('testimonio-imagen').value = testimonio.imagen || '';
-            
-            const imagenPreview = document.getElementById('testimonio-imagen-preview');
-            if (testimonio.imagen) {
-                imagenPreview.src = testimonio.imagen;
+            const imagenPreview = document.getElementById('sobre-mi-imagen-preview');
+            if (sobreMi.imagen) {
+                imagenPreview.src = sobreMi.imagen;
                 imagenPreview.style.display = 'block';
             } else {
                 imagenPreview.style.display = 'none';
             }
-            
-            document.getElementById('testimonio-form-title').textContent = 'Editar Testimonio';
-            testimonioForm.style.display = 'block';
+        } catch (error) {
+            console.error('Error al cargar sobre mí:', error);
         }
     }
     
-    // Eliminar testimonio
-    function deleteTestimonio(id) {
+    // Editar servicio
+    async function editServicio(id) {
+        try {
+            const result = await getData('servicios', id);
+            
+            if (!result.success) {
+                throw new Error(result.error);
+            }
+            
+            const servicio = result.data;
+            if (servicio) {
+                document.getElementById('servicio-id').value = id;
+                document.getElementById('servicio-titulo').value = servicio.titulo;
+                document.getElementById('servicio-descripcion').value = servicio.descripcion;
+                
+                document.getElementById('servicio-form-title').textContent = 'Editar Servicio';
+                servicioForm.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Error al cargar servicio para editar:', error);
+            alert('Error al cargar servicio: ' + error.message);
+        }
+    }
+    
+    // Eliminar servicio
+    async function deleteServicio(id) {
+        if (confirm('¿Estás seguro de que deseas eliminar este servicio?')) {
+            try {
+                // Eliminar de Firebase
+                const deleteResult = await deleteData('servicios', id);
+                
+                if (!deleteResult.success) {
+                    throw new Error(deleteResult.error);
+                }
+                
+                await loadServicios();
+            } catch (error) {
+                console.error('Error al eliminar servicio:', error);
+                alert('Error al eliminar servicio: ' + error.message);
+            }
+        }
+    }
+    
+    // Editar portafolio
+    async function editPortafolio(id) {
+        try {
+            const result = await getData('portafolio', id);
+            
+            if (!result.success) {
+                throw new Error(result.error);
+            }
+            
+            const item = result.data;
+            if (item) {
+                document.getElementById('portafolio-id').value = id;
+                document.getElementById('portafolio-titulo').value = item.titulo;
+                document.getElementById('portafolio-imagen').value = item.imagen;
+                
+                const imagenPreview = document.getElementById('portafolio-imagen-preview');
+                imagenPreview.src = item.imagen;
+                imagenPreview.style.display = 'block';
+                
+                document.getElementById('portafolio-form-title').textContent = 'Editar Proyecto';
+                portafolioForm.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Error al cargar proyecto para editar:', error);
+            alert('Error al cargar proyecto: ' + error.message);
+        }
+    }
+    
+    // Eliminar portafolio
+    async function deletePortafolio(id) {
+        if (confirm('¿Estás seguro de que deseas eliminar este proyecto?')) {
+            try {
+                // Eliminar de Firebase
+                const deleteResult = await deleteData('portafolio', id);
+                
+                if (!deleteResult.success) {
+                    throw new Error(deleteResult.error);
+                }
+                
+                await loadPortafolio();
+            } catch (error) {
+                console.error('Error al eliminar item de portafolio:', error);
+                alert('Error al eliminar item de portafolio: ' + error.message);
+            }
+        }
+    }
+    
+    // Editar testimonio
+    async function editTestimonio(id) {
+        try {
+            const result = await getData('testimonios', id);
+            
+            if (!result.success) {
+                throw new Error(result.error);
+            }
+            
+            const testimonio = result.data;
+            if (testimonio) {
+                document.getElementById('testimonio-id').value = id;
+                document.getElementById('testimonio-nombre').value = testimonio.nombre;
+                document.getElementById('testimonio-titulo').value = testimonio.titulo;
+                document.getElementById('testimonio-texto').value = testimonio.texto;
+                document.getElementById('testimonio-imagen').value = testimonio.imagen || '';
+                
+                const imagenPreview = document.getElementById('testimonio-imagen-preview');
+                if (testimonio.imagen) {
+                    imagenPreview.src = testimonio.imagen;
+                    imagenPreview.style.display = 'block';
+                } else {
+                    imagenPreview.style.display = 'none';
+                }
+                
+                document.getElementById('testimonio-form-title').textContent = 'Editar Testimonio';
+                testimonioForm.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Error al cargar testimonio para editar:', error);
+            alert('Error al cargar testimonio: ' + error.message);
+        }
+    }
+    
+    // Eliminar testimonio de Firebase
+    async function deleteTestimonio(id) {
         if (confirm('¿Estás seguro de que deseas eliminar este testimonio?')) {
-            let testimonios = JSON.parse(localStorage.getItem('testimonios')) || [];
-            testimonios = testimonios.filter(t => t.id != id);
-            localStorage.setItem('testimonios', JSON.stringify(testimonios));
-            loadTestimonios();
+            try {
+                // Eliminar de Firebase
+                const deleteResult = await deleteData('testimonios', id);
+                
+                if (!deleteResult.success) {
+                    throw new Error(deleteResult.error);
+                }
+                
+                await loadTestimonios();
+            } catch (error) {
+                console.error('Error al eliminar testimonio:', error);
+                alert('Error al eliminar testimonio: ' + error.message);
+            }
         }
     }
     
     // Event Listeners
     
-    // Login con mejor manejo de errores y seguridad
-    loginForm.addEventListener('submit', function(e) {
+    // Iniciar sesión con Firebase Auth
+    loginForm.addEventListener('submit', async function(e) {
         e.preventDefault();
-        const username = document.getElementById('username').value;
+        
+        const email = document.getElementById('username').value;
         const password = document.getElementById('password').value;
         
-        // Verificación de credenciales
-        if (username === adminCredentials.username && password === adminCredentials.password) {
-            // Guardar estado de autenticación con tiempo de expiración (24 horas)
-            const expirationTime = new Date().getTime() + (24 * 60 * 60 * 1000);
-            localStorage.setItem('isAuthenticated', 'true');
-            localStorage.setItem('authExpiration', expirationTime);
-            checkAuth();
-        } else {
-            alert('Usuario o contraseña incorrectos. Por favor, inténtalo de nuevo.');
+        try {
+            const result = await loginWithEmailAndPassword(email, password);
+            
+            if (result.success) {
+                // La autenticación se maneja automáticamente con onAuthChange
+                console.log('Inicio de sesión exitoso');
+            } else {
+                alert('Error de autenticación: ' + result.error);
+            }
+        } catch (error) {
+            console.error('Error al iniciar sesión:', error);
+            alert('Error al iniciar sesión: ' + error.message);
         }
     });
     
-    // Logout
-    logoutBtn.addEventListener('click', function() {
-        localStorage.removeItem('isAuthenticated');
-        localStorage.removeItem('authExpiration');
-        checkAuth();
+    // Cerrar sesión con Firebase Auth
+    logoutBtn.addEventListener('click', async function() {
+        try {
+            await logoutUser();
+            // La redirección se maneja automáticamente con onAuthChange
+            console.log('Cierre de sesión exitoso');
+        } catch (error) {
+            console.error('Error al cerrar sesión:', error);
+            alert('Error al cerrar sesión: ' + error.message);
+        }
     });
     
     // Navegación entre secciones
@@ -357,30 +476,55 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Guardar servicio
-    document.getElementById('servicioForm').addEventListener('submit', function(e) {
+    document.getElementById('servicioForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         
         const id = document.getElementById('servicio-id').value;
         const titulo = document.getElementById('servicio-titulo').value;
         const descripcion = document.getElementById('servicio-descripcion').value;
         
-        let servicios = JSON.parse(localStorage.getItem('servicios')) || [];
-        
-        if (id) {
-            // Editar existente
-            const index = servicios.findIndex(s => s.id == id);
-            if (index !== -1) {
-                servicios[index] = { id: parseInt(id), titulo, descripcion };
-            }
-        } else {
-            // Agregar nuevo
-            const newId = servicios.length > 0 ? Math.max(...servicios.map(s => s.id)) + 1 : 1;
-            servicios.push({ id: newId, titulo, descripcion });
+        if (!titulo || !descripcion) {
+            alert('Por favor, completa todos los campos.');
+            return;
         }
         
-        localStorage.setItem('servicios', JSON.stringify(servicios));
-        servicioForm.style.display = 'none';
-        loadServicios();
+        try {
+            if (id) {
+                // Editar existente
+                const servicioActualizado = { id, titulo, descripcion };
+                const updateResult = await updateData('servicios', id, servicioActualizado);
+                
+                if (!updateResult.success) {
+                    throw new Error(updateResult.error);
+                }
+            } else {
+                // Obtener todos los servicios para generar un nuevo ID
+                const result = await getAllData('servicios');
+                const servicios = result.success ? result.data : [];
+                const newId = servicios.length > 0 ? 
+                    (Math.max(...servicios.map(s => parseInt(s.id))) + 1).toString() : '1';
+                
+                // Crear nuevo servicio
+                const nuevoServicio = {
+                    id: newId,
+                    titulo,
+                    descripcion
+                };
+                
+                // Guardar en Firebase
+                const saveResult = await saveData('servicios', newId, nuevoServicio);
+                
+                if (!saveResult.success) {
+                    throw new Error(saveResult.error);
+                }
+            }
+            
+            servicioForm.style.display = 'none';
+            await loadServicios();
+        } catch (error) {
+            console.error('Error al guardar servicio:', error);
+            alert('Error al guardar servicio: ' + error.message);
+        }
     });
     
     // Agregar proyecto al portafolio
@@ -394,30 +538,55 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Guardar proyecto
-    document.getElementById('portafolioForm').addEventListener('submit', function(e) {
+    document.getElementById('portafolioForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         
         const id = document.getElementById('portafolio-id').value;
         const titulo = document.getElementById('portafolio-titulo').value;
         const imagen = document.getElementById('portafolio-imagen').value;
         
-        let portafolio = JSON.parse(localStorage.getItem('portafolio')) || [];
-        
-        if (id) {
-            // Editar existente
-            const index = portafolio.findIndex(p => p.id == id);
-            if (index !== -1) {
-                portafolio[index] = { id: parseInt(id), titulo, imagen };
-            }
-        } else {
-            // Agregar nuevo
-            const newId = portafolio.length > 0 ? Math.max(...portafolio.map(p => p.id)) + 1 : 1;
-            portafolio.push({ id: newId, titulo, imagen });
+        if (!titulo || !imagen) {
+            alert('Por favor, completa todos los campos.');
+            return;
         }
         
-        localStorage.setItem('portafolio', JSON.stringify(portafolio));
-        portafolioForm.style.display = 'none';
-        loadPortafolio();
+        try {
+            if (id) {
+                // Editar existente
+                const itemActualizado = { id, titulo, imagen };
+                const updateResult = await updateData('portafolio', id, itemActualizado);
+                
+                if (!updateResult.success) {
+                    throw new Error(updateResult.error);
+                }
+            } else {
+                // Obtener todos los items para generar un nuevo ID
+                const result = await getAllData('portafolio');
+                const portafolio = result.success ? result.data : [];
+                const newId = portafolio.length > 0 ? 
+                    (Math.max(...portafolio.map(p => parseInt(p.id))) + 1).toString() : '1';
+                
+                // Crear nuevo item
+                const nuevoItem = {
+                    id: newId,
+                    titulo,
+                    imagen
+                };
+                
+                // Guardar en Firebase
+                const saveResult = await saveData('portafolio', newId, nuevoItem);
+                
+                if (!saveResult.success) {
+                    throw new Error(saveResult.error);
+                }
+            }
+            
+            portafolioForm.style.display = 'none';
+            await loadPortafolio();
+        } catch (error) {
+            console.error('Error al guardar item de portafolio:', error);
+            alert('Error al guardar item de portafolio: ' + error.message);
+        }
     });
     
     // Agregar testimonio
@@ -432,8 +601,8 @@ document.addEventListener('DOMContentLoaded', function() {
         testimonioForm.style.display = 'block';
     });
     
-    // Guardar testimonio
-    document.getElementById('testimonioForm').addEventListener('submit', function(e) {
+    // Guardar testimonio en Firebase
+    document.getElementById('testimonioForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         
         const id = document.getElementById('testimonio-id').value;
@@ -442,36 +611,96 @@ document.addEventListener('DOMContentLoaded', function() {
         const texto = document.getElementById('testimonio-texto').value;
         const imagen = document.getElementById('testimonio-imagen').value;
         
-        let testimonios = JSON.parse(localStorage.getItem('testimonios')) || [];
-        
-        if (id) {
-            // Editar existente
-            const index = testimonios.findIndex(t => t.id == id);
-            if (index !== -1) {
-                testimonios[index] = { id: parseInt(id), nombre, titulo, texto, imagen };
-            }
-        } else {
-            // Agregar nuevo
-            const newId = testimonios.length > 0 ? Math.max(...testimonios.map(t => t.id)) + 1 : 1;
-            testimonios.push({ id: newId, nombre, titulo, texto, imagen });
+        if (!nombre || !titulo || !texto) {
+            alert('Por favor, completa los campos obligatorios.');
+            return;
         }
         
-        localStorage.setItem('testimonios', JSON.stringify(testimonios));
-        testimonioForm.style.display = 'none';
-        loadTestimonios();
+        try {
+            if (id) {
+                // Editar existente
+                const testimonioActualizado = { id, nombre, titulo, texto, imagen };
+                const updateResult = await updateData('testimonios', id, testimonioActualizado);
+                
+                if (!updateResult.success) {
+                    throw new Error(updateResult.error);
+                }
+            } else {
+                // Obtener todos los testimonios para generar un nuevo ID
+                const result = await getAllData('testimonios');
+                const testimonios = result.success ? result.data : [];
+                const newId = testimonios.length > 0 ? 
+                    (Math.max(...testimonios.map(t => parseInt(t.id))) + 1).toString() : '1';
+                
+                // Crear nuevo testimonio
+                const nuevoTestimonio = {
+                    id: newId,
+                    nombre,
+                    titulo,
+                    texto,
+                    imagen
+                };
+                
+                // Guardar en Firebase
+                const saveResult = await saveData('testimonios', newId, nuevoTestimonio);
+                
+                if (!saveResult.success) {
+                    throw new Error(saveResult.error);
+                }
+            }
+            
+            testimonioForm.style.display = 'none';
+            await loadTestimonios();
+        } catch (error) {
+            console.error('Error al guardar testimonio:', error);
+            alert('Error al guardar testimonio: ' + error.message);
+        }
     });
     
-    // Guardar Sobre Mí
-    sobreMiForm.addEventListener('submit', function(e) {
+    // Guardar Sobre Mí en Firebase
+    sobreMiForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
         const texto = document.getElementById('sobre-mi-texto').value;
         const imagen = document.getElementById('sobre-mi-imagen').value;
         
-        const sobreMi = { texto, imagen };
-        localStorage.setItem('sobreMi', JSON.stringify(sobreMi));
+        if (!texto) {
+            alert('Por favor, completa el campo de texto.');
+            return;
+        }
         
-        alert('Información guardada correctamente');
+        try {
+            // Obtener datos actuales para verificar si existe
+            const result = await getAllData('sobreMi');
+            const sobreMiArray = result.success ? result.data : [];
+            
+            // ID para el documento (usar el existente o crear uno nuevo)
+            const id = sobreMiArray.length > 0 ? sobreMiArray[0].id : '1';
+            
+            // Datos actualizados
+            const sobreMiActualizado = {
+                id,
+                texto,
+                imagen
+            };
+            
+            // Guardar en Firebase
+            let saveResult;
+            if (sobreMiArray.length > 0) {
+                saveResult = await updateData('sobreMi', id, sobreMiActualizado);
+            } else {
+                saveResult = await saveData('sobreMi', id, sobreMiActualizado);
+            }
+            
+            if (!saveResult.success) {
+                throw new Error(saveResult.error);
+            }
+            
+            alert('Información guardada correctamente.');
+        } catch (error) {
+            console.error('Error al guardar información Sobre Mí:', error);
+            alert('Error al guardar información: ' + error.message);
+        }
     });
     
     // Cancelar formularios

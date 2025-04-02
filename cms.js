@@ -1,19 +1,30 @@
+// Importar las funciones de Firebase
+import { getAllData } from "./firebase-config.js";
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Cargar datos del CMS desde localStorage
-    function loadCmsData() {
-        loadServicios();
-        loadPortafolio();
-        loadTestimonios();
-        loadSobreMi();
+    // Cargar datos del CMS desde Firebase
+    async function loadCmsData() {
+        await Promise.all([
+            loadServicios(),
+            loadPortafolio(),
+            loadTestimonios(),
+            loadSobreMi()
+        ]);
     }
     
-    // Cargar servicios
-    function loadServicios() {
+    // Cargar servicios desde Firebase
+    async function loadServicios() {
         const serviciosSection = document.querySelector('#servicios .grid');
         if (!serviciosSection) return;
         
-        const servicios = JSON.parse(localStorage.getItem('servicios'));
-        if (!servicios) return;
+        const result = await getAllData('servicios');
+        if (!result.success) {
+            console.error('Error al cargar servicios:', result.error);
+            return;
+        }
+        
+        const servicios = result.data;
+        if (!servicios || servicios.length === 0) return;
         
         serviciosSection.innerHTML = '';
         
@@ -28,13 +39,19 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Cargar portafolio
-    function loadPortafolio() {
+    // Cargar portafolio desde Firebase
+    async function loadPortafolio() {
         const portafolioSection = document.querySelector('#portafolio .gallery');
         if (!portafolioSection) return;
         
-        const portafolio = JSON.parse(localStorage.getItem('portafolio'));
-        if (!portafolio) return;
+        const result = await getAllData('portafolio');
+        if (!result.success) {
+            console.error('Error al cargar portafolio:', result.error);
+            return;
+        }
+        
+        const portafolio = result.data;
+        if (!portafolio || portafolio.length === 0) return;
         
         portafolioSection.innerHTML = '';
         
@@ -49,13 +66,19 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Cargar testimonios
-    function loadTestimonios() {
+    // Cargar testimonios desde Firebase
+    async function loadTestimonios() {
         const testimoniosSection = document.querySelector('#testimonios .grid');
         if (!testimoniosSection) return;
         
-        const testimonios = JSON.parse(localStorage.getItem('testimonios'));
-        if (!testimonios) return;
+        const result = await getAllData('testimonios');
+        if (!result.success) {
+            console.error('Error al cargar testimonios:', result.error);
+            return;
+        }
+        
+        const testimonios = result.data;
+        if (!testimonios || testimonios.length === 0) return;
         
         testimoniosSection.innerHTML = '';
         
@@ -71,13 +94,22 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Cargar información de Sobre Mí
-    function loadSobreMi() {
+    // Cargar información de Sobre Mí desde Firebase
+    async function loadSobreMi() {
         const sobreMiSection = document.querySelector('#sobre-mi');
         if (!sobreMiSection) return;
         
-        const sobreMi = JSON.parse(localStorage.getItem('sobreMi'));
-        if (!sobreMi) return;
+        const result = await getAllData('sobreMi');
+        if (!result.success) {
+            console.error('Error al cargar sobre mí:', result.error);
+            return;
+        }
+        
+        // Como sobreMi es un solo documento, tomamos el primero si existe
+        const sobreMiArray = result.data;
+        if (!sobreMiArray || sobreMiArray.length === 0) return;
+        
+        const sobreMi = sobreMiArray[0];
         
         const sobreMiContent = sobreMiSection.querySelector('.card-content p');
         if (sobreMiContent) {
@@ -91,5 +123,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Inicializar
-    loadCmsData();
+    loadCmsData().catch(error => {
+        console.error('Error al cargar datos del CMS:', error);
+    });
 });
