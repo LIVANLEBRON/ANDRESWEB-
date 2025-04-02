@@ -7,10 +7,35 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <meta name="description" content="Servicio profesional de tapicería y restauración de muebles. Transformamos tus muebles con la excelencia que merecen.">
 </head>
 <body>
+    <!-- Botón de cambio de tema -->
+    <div class="theme-toggle" onclick="toggleTheme()" aria-label="Cambiar tema">
+        <img src="theme-toggle-icon.svg" alt="Cambiar tema">
+    </div>
+    
+    <!-- Navegación -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-content">
+            <a href="#" class="nav-logo">Vintage Tapicería</a>
+            <ul class="nav-links">
+                <li><a href="#servicios">Servicios</a></li>
+                <li><a href="#portafolio">Portafolio</a></li>
+                <li><a href="#sobre-mi">Sobre Mí</a></li>
+                <li><a href="#proceso">Proceso</a></li>
+                <li><a href="#testimonios">Testimonios</a></li>
+                <li><a href="contact.html">Contacto</a></li>
+            </ul>
+            <div class="menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
     <!-- Hero Card -->
-    <section class="card hero" data-aos="fade-in" style="background-image: url('https://cdn.gamma.app/bt4ezuzuwajpo7o/generated-images/gJmBzPvb1rN5ztLvgWIl9.jpg');">
+    <section id="hero" class="card hero" data-aos="fade-in" style="background-image: url('https://cdn.gamma.app/bt4ezuzuwajpo7o/generated-images/gJmBzPvb1rN5ztLvgWIl9.jpg');">
         <div class="card-content">
             <h1>VINTAGE TAPICERÍA</h1>
             <p>Transformamos tus muebles con la excelencia que merecen.</p>
@@ -18,7 +43,7 @@
     </section>
 
     <!-- Servicios Card -->
-    <section class="card" data-aos="fade-up">
+    <section id="servicios" class="card" data-aos="fade-up">
         <div class="card-content">
             <h2>Nuestros Servicios</h2>
             <div class="grid">
@@ -43,7 +68,7 @@
     </section>
 
     <!-- Portafolio Card -->
-    <section class="card" data-aos="fade-up">
+    <section id="portafolio" class="card" data-aos="fade-up">
         <div class="card-content">
             <h2>Portafolio</h2>
             <div class="gallery">
@@ -64,7 +89,7 @@
     </section>
 
     <!-- Sobre Mí Card -->
-    <section class="card card-right" data-aos="fade-up">
+    <section id="sobre-mi" class="card card-right" data-aos="fade-up">
         <div class="card-accent" style="background-image: url('https://cdn.gamma.app/bt4ezuzuwajpo7o/generated-images/6OKg0tL5R5dkfY0sjcAQE.jpg');"></div>
         <div class="card-content">
             <h2>Sobre Mí</h2>
@@ -73,7 +98,7 @@
     </section>
 
     <!-- Proceso Card -->
-    <section class="card card-right" data-aos="fade-up">
+    <section id="proceso" class="card card-right" data-aos="fade-up">
         <div class="card-accent" style="background-image: url('https://cdn.gamma.app/bt4ezuzuwajpo7o/generated-images/GTrq3cECrECr_Qu0Iup2i.jpg');"></div>
         <div class="card-content">
             <h2>Nuestro Proceso</h2>
@@ -87,7 +112,7 @@
     </section>
 
     <!-- Testimonios Card -->
-    <section class="card" data-aos="fade-up" style="background-color: #8C98CA;">
+    <section id="testimonios" class="card" data-aos="fade-up" style="background-color: #8C98CA;">
         <div class="card-content">
             <h2>Testimonios de Clientes Satisfechos</h2>
             <div class="grid">
@@ -106,7 +131,7 @@
     </section>
 
     <!-- FAQ Card -->
-    <section class="card" data-aos="fade-up">
+    <section id="faq" class="card" data-aos="fade-up">
         <div class="card-content">
             <h2>Preguntas Frecuentes</h2>
             <div class="timeline">
@@ -116,28 +141,25 @@
         </div>
     </section>
 
-    <!-- Contacto Card -->
-    <section class="card card-right" data-aos="fade-up">
-        <div class="card-accent" style="background-image: url('https://cdn.gamma.app/bt4ezuzuwajpo7o/generated-images/-vWBgi3NSSJWJSzLLWNDY.jpg');"></div>
-        <div class="card-content">
-            <h2>Contacto</h2>
-            <p>Andrés Lebrón Abreu - Dueño</p>
-            <p>Teléfono: 1 (829) 441-5959</p>
-            <p>Envíanos tus datos para renovar tus muebles hoy mismo:</p>
-            <form id="contactForm">
-                <input type="text" name="name" placeholder="Tu nombre" required>
-                <input type="email" name="email" placeholder="Tu correo electrónico" required>
-                <textarea name="message" placeholder="Tu mensaje" required></textarea>
-                <button type="submit">Enviar</button>
-            </form>
-        </div>
-    </section>
+    <!-- Sección de contacto eliminada - Ahora disponible en contact.html -->
 
     <footer class="footer">
         <p>Derechos Reservados 2025 - Livan Andres</p>
+        <div class="footer-links">
+            <a href="#hero">Inicio</a>
+            <a href="#servicios">Servicios</a>
+            <a href="#portafolio">Portafolio</a>
+            <a href="contact.html">Contacto</a>
+        </div>
     </footer>
+
+    <!-- Botón flotante de WhatsApp -->
+    <a href="https://wa.me/18294415959" class="whatsapp-float" target="_blank" rel="noopener noreferrer" aria-label="Chatear por WhatsApp">
+        <img src="whatsapp-icon.svg" alt="WhatsApp">
+    </a>
 
     <script src="script.js"></script>
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="cms.js"></script>
 </body>
 </html>

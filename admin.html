@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Vintage Tapicería</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Estilos específicos para el panel de administración */
+        .admin-container {
+            max-width: 1200px;
+            margin: 100px auto 20px;
+            padding: 20px;
+        }
+        
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .admin-nav {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        
+        .admin-nav button {
+            background: none;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--text-color);
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .admin-nav button.active {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+        }
+        
+        .admin-section {
+            display: none;
+        }
+        
+        .admin-section.active {
+            display: block;
+        }
+        
+        .content-item {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .content-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .btn {
+            padding: 8px 15px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 30px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .image-preview {
+            max-width: 200px;
+            max-height: 200px;
+            margin-top: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        
+        body.dark-theme .btn-secondary {
+            background: #333;
+            color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Botón de cambio de tema -->
+    <div class="theme-toggle" onclick="toggleTheme()" aria-label="Cambiar tema">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <!-- Sol (modo claro) -->
+            <path class="sun" d="M12,7 C9.24,7 7,9.24 7,12 C7,14.76 9.24,17 12,17 C14.76,17 17,14.76 17,12 C17,9.24 14.76,7 12,7 M12,19 C8.13,19 5,15.87 5,12 C5,8.13 8.13,5 12,5 C15.87,5 19,8.13 19,12 C19,15.87 15.87,19 12,19 M12,3 L12,1 L12,3 M12,23 L12,21 L12,23 M3,12 L1,12 L3,12 M23,12 L21,12 L23,12 M5.6,5.6 L4.2,4.2 L5.6,5.6 M18.4,5.6 L19.8,4.2 L18.4,5.6 M5.6,18.4 L4.2,19.8 L5.6,18.4 M18.4,18.4 L19.8,19.8 L18.4,18.4" />
+            <!-- Luna (modo oscuro) -->
+            <path class="moon" d="M12,3 C7.03,3 3,7.03 3,12 C3,16.97 7.03,21 12,21 C16.97,21 21,16.97 21,12 C21,11.54 20.96,11.08 20.9,10.64 C19.92,12.01 18.32,12.9 16.5,12.9 C13.52,12.9 11.1,10.48 11.1,7.5 C11.1,5.69 11.99,4.08 13.36,3.1 C12.92,3.04 12.46,3 12,3 Z" />
+        </svg>
+    </div>
+    
+    <div id="login-section" class="login-container">
+        <div class="login-header">
+            <h2>Acceso Administrador</h2>
+        </div>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">Usuario</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Contraseña</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Iniciar Sesión</button>
+        </form>
+    </div>
+    
+    <div id="admin-panel" class="admin-container" style="display: none;">
+        <div class="admin-header">
+            <h1>Panel de Administración</h1>
+            <button id="logoutBtn" class="btn btn-secondary">Cerrar Sesión</button>
+        </div>
+        
+        <div class="admin-nav">
+            <button class="nav-btn active" data-section="servicios">Servicios</button>
+            <button class="nav-btn" data-section="portafolio">Portafolio</button>
+            <button class="nav-btn" data-section="testimonios">Testimonios</button>
+            <button class="nav-btn" data-section="sobre-mi">Sobre Mí</button>
+        </div>
+        
+        <!-- Sección de Servicios -->
+        <div id="servicios-section" class="admin-section active">
+            <h2>Gestionar Servicios</h2>
+            <div id="servicios-list">
+                <!-- Los servicios se cargarán aquí dinámicamente -->
+            </div>
+            <button id="add-servicio-btn" class="btn btn-primary">Agregar Nuevo Servicio</button>
+            
+            <div id="servicio-form" class="content-item" style="display: none;">
+                <h3 id="servicio-form-title">Agregar Servicio</h3>
+                <form id="servicioForm">
+                    <input type="hidden" id="servicio-id">
+                    <div class="form-group">
+                        <label for="servicio-titulo">Título</label>
+                        <input type="text" id="servicio-titulo" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="servicio-descripcion">Descripción</label>
+                        <textarea id="servicio-descripcion" rows="3" required></textarea>
+                    </div>
+                    <div class="content-actions">
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                        <button type="button" class="btn btn-secondary cancel-form">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Sección de Portafolio -->
+        <div id="portafolio-section" class="admin-section">
+            <h2>Gestionar Portafolio</h2>
+            <div id="portafolio-list">
+                <!-- Los elementos del portafolio se cargarán aquí dinámicamente -->
+            </div>
+            <button id="add-portafolio-btn" class="btn btn-primary">Agregar Nuevo Proyecto</button>
+            
+            <div id="portafolio-form" class="content-item" style="display: none;">
+                <h3 id="portafolio-form-title">Agregar Proyecto</h3>
+                <form id="portafolioForm">
+                    <input type="hidden" id="portafolio-id">
+                    <div class="form-group">
+                        <label for="portafolio-titulo">Título</label>
+                        <input type="text" id="portafolio-titulo" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="portafolio-imagen">URL de la Imagen</label>
+                        <input type="text" id="portafolio-imagen" required>
+                        <img id="portafolio-imagen-preview" class="image-preview" style="display: none;">
+                    </div>
+                    <div class="content-actions">
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                        <button type="button" class="btn btn-secondary cancel-form">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Sección de Testimonios -->
+        <div id="testimonios-section" class="admin-section">
+            <h2>Gestionar Testimonios</h2>
+            <div id="testimonios-list">
+                <!-- Los testimonios se cargarán aquí dinámicamente -->
+            </div>
+            <button id="add-testimonio-btn" class="btn btn-primary">Agregar Nuevo Testimonio</button>
+            
+            <div id="testimonio-form" class="content-item" style="display: none;">
+                <h3 id="testimonio-form-title">Agregar Testimonio</h3>
+                <form id="testimonioForm">
+                    <input type="hidden" id="testimonio-id">
+                    <div class="form-group">
+                        <label for="testimonio-nombre">Nombre del Cliente</label>
+                        <input type="text" id="testimonio-nombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="testimonio-titulo">Título</label>
+                        <input type="text" id="testimonio-titulo" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="testimonio-texto">Testimonio</label>
+                        <textarea id="testimonio-texto" rows="3" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="testimonio-imagen">URL de la Imagen</label>
+                        <input type="text" id="testimonio-imagen">
+                        <img id="testimonio-imagen-preview" class="image-preview" style="display: none;">
+                    </div>
+                    <div class="content-actions">
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                        <button type="button" class="btn btn-secondary cancel-form">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Sección de Sobre Mí -->
+        <div id="sobre-mi-section" class="admin-section">
+            <h2>Gestionar Sobre Mí</h2>
+            <div class="content-item">
+                <form id="sobreMiForm">
+                    <div class="form-group">
+                        <label for="sobre-mi-texto">Descripción</label>
+                        <textarea id="sobre-mi-texto" rows="5" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="sobre-mi-imagen">URL de la Imagen</label>
+                        <input type="text" id="sobre-mi-imagen">
+                        <img id="sobre-mi-imagen-preview" class="image-preview" style="display: none;">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+    <script>
+        // Verificar tema guardado
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-theme');
+        }
+        
+        // Función para cambiar el tema de color (claro/oscuro)
+        function toggleTheme() {
+            document.body.classList.toggle('dark-theme');
+            localStorage.setItem('theme', document.body.classList.contains('dark-theme') ? 'dark' : 'light');
+        }
+    </script>
+</body>
+</html>
